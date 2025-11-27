@@ -3,7 +3,7 @@
 @section('title', 'Контакты')
 
 @section('content')
-<div class="max-w-5xl mx-auto">
+<section class="max-w-5xl mx-auto">
     <div class="text-center mb-12">
         <h1 class="text-5xl font-bold mb-4 bg-gradient-to-r from-violet-400 via-purple-400 to-indigo-400 bg-clip-text text-transparent">
             Свяжитесь с нами

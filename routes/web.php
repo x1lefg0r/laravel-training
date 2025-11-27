@@ -2,16 +2,14 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\MainController;
+use App\Http\Controllers\AuthController;
 
-// Главная страница через контроллер
 Route::get('/', [MainController::class, 'index']);
 
-// Страница "О нас"
 Route::get('/about', function () {
     return view('about');
 });
 
-// Страница "Контакты" с передачей данных
 Route::get('/contacts', function () {
     $contacts = [
         [
@@ -35,5 +33,7 @@ Route::get('/contacts', function () {
     return view('contacts', ['contacts' => $contacts]);
 });
 
-// Страница галереи (отдельное изображение)
 Route::get('/gallery/{index}', [MainController::class, 'gallery']);
+
+Route::get('/signin', [AuthController::class, 'create'])->name('signin');
+Route::post('/signin', [AuthController::class, 'registration'])->name('registration');

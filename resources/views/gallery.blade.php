@@ -4,7 +4,6 @@
 
 @section('content')
 <div class="max-w-5xl mx-auto">
-    <!-- Back Button -->
     <div class="mb-8">
         <a href="/" class="inline-flex items-center text-violet-400 hover:text-purple-400 transition-colors group">
             <svg class="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -14,9 +13,7 @@
         </a>
     </div>
 
-    <!-- Image Card -->
     <div class="bg-gray-900/50 backdrop-blur-sm border border-gray-800 rounded-2xl overflow-hidden">
-        <!-- Full Image -->
         <div class="aspect-video bg-gray-800">
             <img 
                 src="/{{ $item['full_image'] }}" 
@@ -26,7 +23,6 @@
             >
         </div>
         
-        <!-- Info Section -->
         <div class="p-8">
             <div class="flex items-start justify-between mb-4">
                 <h1 class="text-4xl font-bold bg-gradient-to-r from-violet-400 via-purple-400 to-indigo-400 bg-clip-text text-transparent">

@@ -19,6 +19,7 @@
                     <li><a href="/" class="text-gray-300 hover:text-violet-400 transition-all duration-300 hover:scale-105 inline-block">Главная</a></li>
                     <li><a href="/about" class="text-gray-300 hover:text-violet-400 transition-all duration-300 hover:scale-105 inline-block">О нас</a></li>
                     <li><a href="/contacts" class="text-gray-300 hover:text-violet-400 transition-all duration-300 hover:scale-105 inline-block">Контакты</a></li>
+                    <li><a href="/signin" class="text-gray-300 hover:text-violet-400 transition-all duration-300 hover:scale-105 inline-block">Регистрация</a></li>
                 </ul>
             </div>
         </nav>

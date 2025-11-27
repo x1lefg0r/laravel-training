@@ -26,7 +26,6 @@
                     >
                 </div>
                 
-                <!-- Info -->
                 <div class="p-6">
                     <h3 class="text-xl font-semibold text-violet-400 mb-2 group-hover:text-purple-400 transition-colors">
                         {{ $item['name'] }}
