@@ -20,35 +20,36 @@ class AuthController extends Controller
     /**
      * Обработка регистрации
      */
-    public function register(Request $request)
-    {
-        // Валидация
-        $validated = $request->validate([
-            'name' => 'required|string|min:2|max:255',
-            'email' => 'required|email|unique:users,email|max:255',
-            'password' => 'required|string|min:8|confirmed',
-        ], [
-            'name.required' => 'Поле "Имя" обязательно',
-            'name.min' => 'Имя должно содержать минимум 2 символа',
-            'email.required' => 'Поле "Email" обязательно',
-            'email.email' => 'Введите корректный email',
-            'email.unique' => 'Пользователь с таким email уже существует',
-            'password.required' => 'Поле "Пароль" обязательно',
-            'password.min' => 'Пароль должен содержать минимум 8 символов',
-            'password.confirmed' => 'Пароли не совпадают',
-        ]);
+public function register(Request $request) {
+    $validated = $request->validate([
+        'name' => 'required|string|min:2|max:255',
+        'email' => 'required|email|unique:users,email|max:255',
+        'password' => 'required|string|min:8|confirmed',
+    ], [
+        'name.required' => 'Поле "Имя" обязательно',
+        'name.min' => 'Имя должно содержать минимум 2 символа',
+        'email.required' => 'Поле "Email" обязательно',
+        'email.email' => 'Введите корректный email',
+        'email.unique' => 'Пользователь с таким email уже существует',
+        'password.required' => 'Поле "Пароль" обязательно',
+        'password.min' => 'Пароль должен содержать минимум 8 символов',
+        'password.confirmed' => 'Пароли не совпадают',
+    ]);
 
-        // Создаём пользователя
-        User::create([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'password' => Hash::make($validated['password']),
-        ]);
+    // Создаём пользователя
+    $user = User::create([
+        'name' => $validated['name'],
+        'email' => $validated['email'],
+        'password' => Hash::make($validated['password']),
+    ]);
 
-        // Редирект на страницу входа
-        return redirect()->route('login')
-            ->with('success', 'Регистрация прошла успешно! Войдите в систему.');
-    }
+    // Назначаем роль "читатель"
+    $readerRole = \App\Models\Role::where('name', 'reader')->first();
+    $user->roles()->attach($readerRole);
+
+    return redirect()->route('login')
+        ->with('success', 'Регистрация прошла успешно! Войдите в систему.');
+}
 
     /**
      * Показать форму входа

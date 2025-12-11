@@ -22,22 +22,25 @@
                     <li><a href="/about" class="text-gray-300 hover:text-violet-400 transition-all duration-300 hover:scale-105 inline-block">О нас</a></li>
                     <li><a href="/contacts" class="text-gray-300 hover:text-violet-400 transition-all duration-300 hover:scale-105 inline-block">Контакты</a></li>
                     
-                    @auth
-                        <!-- Если пользователь авторизован -->
-                        <li class="text-gray-400">{{ Auth::user()->name }}</li>
-                        <li>
-                            <form action="{{ route('logout') }}" method="POST" class="inline">
-                                @csrf
-                                <button type="submit" class="text-gray-300 hover:text-red-400 transition-all duration-300">
-                                    Выйти
-                                </button>
-                            </form>
-                        </li>
-                    @else
-                        <!-- Если пользователь не авторизован -->
-                        <li><a href="{{ route('login') }}" class="text-gray-300 hover:text-violet-400 transition-all duration-300 hover:scale-105 inline-block">Вход</a></li>
-                        <li><a href="{{ route('register.create') }}" class="px-4 py-2 bg-gradient-to-r from-violet-600 to-indigo-600 rounded-lg font-semibold hover:from-violet-500 hover:to-indigo-500 transition-all duration-300">Регистрация</a></li>
-                    @endauth
+@auth
+    <!-- Если пользователь авторизован -->
+    <li class="text-gray-400">{{ Auth::user()->name }}</li>
+    @if(Auth::user()->isModerator())
+        <li><span class="px-2 py-1 bg-violet-600/20 text-violet-400 rounded text-xs font-semibold">Модератор</span></li>
+    @endif
+    <li>
+        <form action="{{ route('logout') }}" method="POST" class="inline">
+            @csrf
+            <button type="submit" class="text-gray-300 hover:text-red-400 transition-all duration-300">
+                Выйти
+            </button>
+        </form>
+    </li>
+@else
+    <!-- Если пользователь не авторизован -->
+    <li><a href="{{ route('login') }}" class="text-gray-300 hover:text-violet-400 transition-all duration-300 hover:scale-105 inline-block">Вход</a></li>
+    <li><a href="{{ route('register.create') }}" class="px-4 py-2 bg-gradient-to-r from-violet-600 to-indigo-600 rounded-lg font-semibold hover:from-violet-500 hover:to-indigo-500 transition-all duration-300">Регистрация</a></li>
+@endauth
                 </ul>
             </div>
         </nav>

@@ -5,31 +5,18 @@ namespace App\Http\Controllers;
 use App\Models\Comment;
 use App\Models\Article;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class CommentController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
-    {
-        //
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
     /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request, Article $article)
     {
-        // Валидация
+        // Проверяем право на создание комментария
+        Gate::authorize('create', Comment::class);
+
         $validated = $request->validate([
             'author' => 'required|string|max:255',
             'content' => 'required|string|min:3',
@@ -39,7 +26,6 @@ class CommentController extends Controller
             'content.min' => 'Комментарий должен содержать минимум 3 символа',
         ]);
 
-        // Создаём комментарий
         $article->comments()->create($validated);
 
         return redirect()->route('articles.show', $article->id)
@@ -47,27 +33,13 @@ class CommentController extends Controller
     }
 
     /**
-     * Display the specified resource.
-     */
-    public function show(Comment $comment)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Comment $comment)
-    {
-        //
-    }
-
-    /**
      * Update the specified resource in storage.
      */
     public function update(Request $request, Comment $comment)
     {
-        // Валидация
+        // Проверяем право на редактирование
+        Gate::authorize('update', $comment);
+
         $validated = $request->validate([
             'author' => 'required|string|max:255',
             'content' => 'required|string|min:3',
@@ -77,7 +49,6 @@ class CommentController extends Controller
             'content.min' => 'Комментарий должен содержать минимум 3 символа',
         ]);
 
-        // Обновляем комментарий
         $comment->update($validated);
 
         return redirect()->route('articles.show', $comment->article_id)
@@ -89,6 +60,9 @@ class CommentController extends Controller
      */
     public function destroy(Comment $comment)
     {
+        // Проверяем право на удаление
+        Gate::authorize('delete', $comment);
+
         $articleId = $comment->article_id;
         $comment->delete();
 
