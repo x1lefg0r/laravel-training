@@ -3,13 +3,18 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\MainController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ArticleController;
+use App\Http\Controllers\CommentController;
 
+// Главная страница
 Route::get('/', [MainController::class, 'index']);
 
+// Страница "О нас"
 Route::get('/about', function () {
     return view('about');
 });
 
+// Страница "Контакты"
 Route::get('/contacts', function () {
     $contacts = [
         [
@@ -33,7 +38,33 @@ Route::get('/contacts', function () {
     return view('contacts', ['contacts' => $contacts]);
 });
 
+// Галерея
 Route::get('/gallery/{index}', [MainController::class, 'gallery']);
 
-Route::get('/signin', [AuthController::class, 'create'])->name('signin');
-Route::post('/signin', [AuthController::class, 'registration'])->name('registration');
+// ===== Авторизация и регистрация (доступны всем) =====
+Route::get('/register', [AuthController::class, 'createRegister'])->name('register.create');
+Route::post('/register', [AuthController::class, 'register'])->name('register');
+
+Route::get('/login', [AuthController::class, 'createLogin'])->name('login');
+Route::post('/login', [AuthController::class, 'login']);
+
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');
+
+// ===== Новости (только чтение для всех) =====
+Route::get('/articles', [ArticleController::class, 'index'])->name('articles.index');
+Route::get('/articles/{article}', [ArticleController::class, 'show'])->name('articles.show');
+
+// ===== Защищённые маршруты (только для авторизованных) =====
+Route::middleware('auth:sanctum')->group(function () {
+    // Управление статьями
+    Route::get('/articles/create', [ArticleController::class, 'create'])->name('articles.create');
+    Route::post('/articles', [ArticleController::class, 'store'])->name('articles.store');
+    Route::get('/articles/{article}/edit', [ArticleController::class, 'edit'])->name('articles.edit');
+    Route::put('/articles/{article}', [ArticleController::class, 'update'])->name('articles.update');
+    Route::delete('/articles/{article}', [ArticleController::class, 'destroy'])->name('articles.destroy');
+    
+    // Управление комментариями
+    Route::post('articles/{article}/comments', [CommentController::class, 'store'])->name('comments.store');
+    Route::put('comments/{comment}', [CommentController::class, 'update'])->name('comments.update');
+    Route::delete('comments/{comment}', [CommentController::class, 'destroy'])->name('comments.destroy');
+});
