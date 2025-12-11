@@ -6,6 +6,7 @@ use App\Models\Comment;
 use App\Models\Article;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Auth;
 
 class CommentController extends Controller
 {
@@ -18,15 +19,18 @@ class CommentController extends Controller
         Gate::authorize('create', Comment::class);
 
         $validated = $request->validate([
-            'author' => 'required|string|max:255',
             'content' => 'required|string|min:3',
         ], [
-            'author.required' => 'Укажите ваше имя',
             'content.required' => 'Напишите комментарий',
             'content.min' => 'Комментарий должен содержать минимум 3 символа',
         ]);
 
-        $article->comments()->create($validated);
+        // Создаём комментарий с данными авторизованного пользователя
+        $article->comments()->create([
+            'user_id' => Auth::id(),
+            'author' => Auth::user()->name,
+            'content' => $validated['content'],
+        ]);
 
         return redirect()->route('articles.show', $article->id)
             ->with('success', 'Комментарий успешно добавлен!');
@@ -41,15 +45,15 @@ class CommentController extends Controller
         Gate::authorize('update', $comment);
 
         $validated = $request->validate([
-            'author' => 'required|string|max:255',
             'content' => 'required|string|min:3',
         ], [
-            'author.required' => 'Укажите ваше имя',
             'content.required' => 'Напишите комментарий',
             'content.min' => 'Комментарий должен содержать минимум 3 символа',
         ]);
 
-        $comment->update($validated);
+        $comment->update([
+            'content' => $validated['content'],
+        ]);
 
         return redirect()->route('articles.show', $comment->article_id)
             ->with('success', 'Комментарий успешно обновлён!');

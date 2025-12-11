@@ -34,9 +34,8 @@ class CommentPolicy
      */
     public function update(User $user, Comment $comment): Response
     {
-        // Модератор уже разрешён в before()
-        // Проверяем, является ли пользователь автором
-        if ($comment->author === $user->name) {
+        // Проверяем, является ли пользователь автором комментария
+        if ($comment->user_id === $user->id) {
             return Response::allow();
         }
 
@@ -48,7 +47,7 @@ class CommentPolicy
      */
     public function delete(User $user, Comment $comment): Response
     {
-        if ($comment->author === $user->name) {
+        if ($comment->user_id === $user->id) {
             return Response::allow();
         }
 

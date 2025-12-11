@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\Article;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -18,9 +19,10 @@ class CommentFactory extends Factory
     public function definition(): array
     {
         return [
-            'article_id' => Article::factory(),              // Создаст статью, если нет
-            'author' => fake()->name(),                      // Случайное имя
-            'content' => fake()->paragraph(3),               // 3 предложения
+            'article_id' => Article::factory(),
+            'user_id' => User::factory(),
+            'author' => fake()->name(),
+            'content' => fake()->paragraph(3),
         ];
     }
 }

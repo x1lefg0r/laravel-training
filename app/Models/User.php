@@ -61,4 +61,12 @@ class User extends Authenticatable
     {
         return $this->hasRole('moderator');
     }
+
+    /**
+     * Пользователь имеет много комментариев
+     */
+    public function comments()
+    {
+        return $this->hasMany(Comment::class);
+    }
 }
