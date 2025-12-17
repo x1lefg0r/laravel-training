@@ -11,11 +11,61 @@ use Illuminate\Support\Facades\Auth;
 class CommentController extends Controller
 {
     /**
+     * Показать страницу модерации комментариев (только для модераторов)
+     */
+    public function moderation()
+    {
+        // Проверяем, что пользователь - модератор
+        if (!Auth::user() || !Auth::user()->isModerator()) {
+            abort(403, 'Доступ запрещён. Только модераторы могут просматривать эту страницу.');
+        }
+
+        // Получаем все комментарии на модерации
+        $comments = Comment::with(['article', 'user'])
+            ->pending()
+            ->orderBy('created_at', 'desc')
+            ->paginate(15);
+
+        return view('comments.moderation', compact('comments'));
+    }
+
+    /**
+     * Одобрить комментарий
+     */
+    public function approve(Comment $comment)
+    {
+        // Проверяем, что пользователь - модератор
+        if (!Auth::user() || !Auth::user()->isModerator()) {
+            abort(403, 'Доступ запрещён.');
+        }
+
+        $comment->update(['is_approved' => true]);
+
+        return redirect()->back()
+            ->with('success', 'Комментарий одобрен!');
+    }
+
+    /**
+     * Отклонить (удалить) комментарий
+     */
+    public function reject(Comment $comment)
+    {
+        // Проверяем, что пользователь - модератор
+        if (!Auth::user() || !Auth::user()->isModerator()) {
+            abort(403, 'Доступ запрещён.');
+        }
+
+        $comment->delete();
+
+        return redirect()->back()
+            ->with('success', 'Комментарий отклонён и удалён.');
+    }
+
+    /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request, Article $article)
     {
-        // Проверяем право на создание комментария
         Gate::authorize('create', Comment::class);
 
         $validated = $request->validate([
@@ -25,15 +75,16 @@ class CommentController extends Controller
             'content.min' => 'Комментарий должен содержать минимум 3 символа',
         ]);
 
-        // Создаём комментарий с данными авторизованного пользователя
+        // Создаём комментарий (по умолчанию is_approved = false)
         $article->comments()->create([
             'user_id' => Auth::id(),
             'author' => Auth::user()->name,
             'content' => $validated['content'],
+            'is_approved' => false, // Ожидает модерации
         ]);
 
         return redirect()->route('articles.show', $article->id)
-            ->with('success', 'Комментарий успешно добавлен!');
+            ->with('info', 'Ваш комментарий отправлен на модерацию и появится после одобрения.');
     }
 
     /**
@@ -41,7 +92,6 @@ class CommentController extends Controller
      */
     public function update(Request $request, Comment $comment)
     {
-        // Проверяем право на редактирование
         Gate::authorize('update', $comment);
 
         $validated = $request->validate([
@@ -51,12 +101,14 @@ class CommentController extends Controller
             'content.min' => 'Комментарий должен содержать минимум 3 символа',
         ]);
 
+        // После редактирования комментарий снова отправляется на модерацию
         $comment->update([
             'content' => $validated['content'],
+            'is_approved' => false, // Снова на модерацию
         ]);
 
         return redirect()->route('articles.show', $comment->article_id)
-            ->with('success', 'Комментарий успешно обновлён!');
+            ->with('info', 'Комментарий обновлён и отправлен на модерацию.');
     }
 
     /**
@@ -64,7 +116,6 @@ class CommentController extends Controller
      */
     public function destroy(Comment $comment)
     {
-        // Проверяем право на удаление
         Gate::authorize('delete', $comment);
 
         $articleId = $comment->article_id;

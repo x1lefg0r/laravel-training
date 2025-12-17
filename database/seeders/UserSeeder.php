@@ -17,7 +17,7 @@ class UserSeeder extends Seeder
         // Создаём модератора
         $moderator = User::create([
             'name' => 'Модератор',
-            'email' => 'moderator@example.com',
+            'email' => 'ebalynin@mail.ru',
             'password' => Hash::make('password123'),
         ]);
 

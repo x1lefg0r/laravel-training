@@ -17,6 +17,14 @@ class Comment extends Model
         'user_id',
         'author',
         'content',
+        'is_approved',
+    ];
+
+    /**
+     * Приведение типов
+     */
+    protected $casts = [
+        'is_approved' => 'boolean',
     ];
 
     /**
@@ -33,5 +41,21 @@ class Comment extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Scope для получения только одобренных комментариев
+     */
+    public function scopeApproved($query)
+    {
+        return $query->where('is_approved', true);
+    }
+
+    /**
+     * Scope для получения комментариев на модерации
+     */
+    public function scopePending($query)
+    {
+        return $query->where('is_approved', false);
     }
 }

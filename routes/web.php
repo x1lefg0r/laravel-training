@@ -52,6 +52,10 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middl
 
 // ===== Новости (только чтение для всех) =====
 Route::get('/articles', [ArticleController::class, 'index'])->name('articles.index');
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/articles/create', [ArticleController::class, 'create'])->name('articles.create');
+    Route::post('/articles', [ArticleController::class, 'store'])->name('articles.store');
+});
 Route::get('/articles/{article}', [ArticleController::class, 'show'])->name('articles.show');
 
 // ===== Защищённые маршруты (только для авторизованных) =====
@@ -68,3 +72,22 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('comments/{comment}', [CommentController::class, 'update'])->name('comments.update');
     Route::delete('comments/{comment}', [CommentController::class, 'destroy'])->name('comments.destroy');
 });
+
+// Модерация комментариев (только для модераторов)
+Route::middleware(['auth:sanctum'])->group(function () {
+    Route::get('/comments/moderation', [CommentController::class, 'moderation'])->name('comments.moderation');
+    Route::patch('/comments/{comment}/approve', [CommentController::class, 'approve'])->name('comments.approve');
+    Route::delete('/comments/{comment}/reject', [CommentController::class, 'reject'])->name('comments.reject');
+});
+
+// Модерация комментариев (только для модераторов)
+Route::middleware(['auth:sanctum'])->group(function () {
+    Route::get('/comments/moderation', [CommentController::class, 'moderation'])->name('comments.moderation');
+    Route::patch('/comments/{comment}/approve', [CommentController::class, 'approve'])->name('comments.approve');
+    Route::delete('/comments/{comment}/reject', [CommentController::class, 'reject'])->name('comments.reject');
+});
+
+// Просмотр статьи с логированием
+Route::get('/articles/{article}', [ArticleController::class, 'show'])
+    ->name('articles.show')
+    ->middleware('log.page.view');

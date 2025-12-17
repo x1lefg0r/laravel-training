@@ -95,12 +95,13 @@
     </article>
 
  <!-- Секция комментариев -->
+<!-- Секция комментариев -->
 <div class="bg-gray-900/50 backdrop-blur-sm border border-gray-800 rounded-2xl p-8">
     <h2 class="text-2xl font-bold mb-6 text-gray-100 flex items-center">
         <svg class="w-6 h-6 mr-2 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
         </svg>
-        Комментарии ({{ $article->comments->count() }})
+        Комментарии ({{ $article->comments()->approved()->count() }})
     </h2>
 
     @auth
@@ -119,6 +120,18 @@
                 </div>
             @endif
 
+            <!-- Сообщение о модерации -->
+            @if(session('info'))
+                <div class="bg-blue-500/10 border border-blue-500/50 rounded-lg p-4 mb-4">
+                    <p class="text-blue-400 text-sm flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        {{ session('info') }}
+                    </p>
+                </div>
+            @endif
+
             <form action="{{ route('comments.store', $article->id) }}" method="POST" class="space-y-4">
                 @csrf
                 
@@ -133,6 +146,9 @@
                         class="w-full px-4 py-2 bg-gray-800/50 border border-gray-700 rounded-lg text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all resize-none"
                         placeholder="Напишите ваш комментарий..."
                     >{{ old('content') }}</textarea>
+                    <p class="mt-2 text-sm text-gray-500">
+                        💡 Комментарий будет опубликован после проверки модератором
+                    </p>
                 </div>
 
                 <button 
@@ -154,9 +170,9 @@
         </div>
     @endauth
 
-    <!-- Список комментариев -->
+    <!-- Список ОДОБРЕННЫХ комментариев -->
     <div class="space-y-4">
-        @forelse($article->comments()->orderBy('created_at', 'desc')->get() as $comment)
+        @forelse($article->comments()->approved()->orderBy('created_at', 'desc')->get() as $comment)
         <div class="bg-gray-800/30 rounded-xl p-6">
             <div class="flex justify-between items-start mb-3">
                 <div class="flex items-center space-x-3">
@@ -233,6 +249,9 @@
                         rows="3"
                         class="w-full px-4 py-2 bg-gray-800/50 border border-gray-700 rounded-lg text-gray-100 focus:outline-none focus:ring-2 focus:ring-violet-500 resize-none"
                     >{{ $comment->content }}</textarea>
+                    <p class="mt-2 text-sm text-yellow-400">
+                        ⚠️ После редактирования комментарий будет отправлен на повторную модерацию
+                    </p>
                 </div>
                 
                 <div class="flex space-x-2">

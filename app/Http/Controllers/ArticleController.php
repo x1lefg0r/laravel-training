@@ -3,8 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\Article;
+use App\Models\User;
+use App\Jobs\SendNewArticleNotification;
+use App\Events\NewArticleEvent;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 
 class ArticleController extends Controller
 {
@@ -13,8 +18,13 @@ class ArticleController extends Controller
      */
     public function index()
     {
-        $articles = Article::orderBy('published_at', 'desc')->paginate(9);
-        
+        $page = request('page', 1);
+        $cacheKey = 'articles:page:' . $page; 
+
+        $articles = Cache::remember($cacheKey, 60 * 60, function () { 
+            return Article::paginate(10);
+        });
+
         return view('articles.index', compact('articles'));
     }
 
@@ -23,7 +33,6 @@ class ArticleController extends Controller
      */
     public function create()
     {
-        // Проверяем право на создание
         Gate::authorize('create', Article::class);
 
         return view('articles.create');
@@ -34,30 +43,38 @@ class ArticleController extends Controller
      */
     public function store(Request $request)
     {
-        // Проверяем право на создание
         Gate::authorize('create', Article::class);
-
+    
         $validated = $request->validate([
-            'title' => 'required|string|min:5|max:255',
-            'content' => 'required|string|min:20',
-            'author' => 'required|string|max:255',
-            'published_at' => 'required|date',
-            'image' => 'nullable|url',
+        'title' => 'required|string|min:5|max:255',
+        'content' => 'required|string|min:20',
+        'author' => 'required|string|max:255',
+        'published_at' => 'required|date',
+        'image' => 'nullable|url',
         ], [
-            'title.required' => 'Заголовок обязателен для заполнения',
-            'title.min' => 'Заголовок должен содержать минимум 5 символов',
-            'content.required' => 'Содержимое обязательно для заполнения',
-            'content.min' => 'Содержимое должно содержать минимум 20 символов',
-            'author.required' => 'Автор обязателен для заполнения',
-            'published_at.required' => 'Дата публикации обязательна',
-            'published_at.date' => 'Неверный формат даты',
-            'image.url' => 'Изображение должно быть корректным URL',
+        'title.required' => 'Заголовок обязателен для заполнения',
+        'title.min' => 'Заголовок должен содержать минимум 5 символов',
+        'content.required' => 'Содержимое обязательно для заполнения',
+        'content.min' => 'Содержимое должно содержать минимум 20 символов',
+        'author.required' => 'Автор обязателен для заполнения',
+        'published_at.required' => 'Дата публикации обязательна',
+        'published_at.date' => 'Неверный формат даты',
+        'image.url' => 'Изображение должно быть корректным URL',
         ]);
-
-        Article::create($validated);
-
+    
+        // Создаём статью
+        $article = Article::create($validated);
+    
+        // Отправляем задачу в очередь
+        SendNewArticleNotification::dispatch($article, Auth::user());
+    
+        // Отправляем Push-уведомление
+        event(new NewArticleEvent($article));
+        
+        Cache::forget('articles:page:1');
+    
         return redirect()->route('articles.index')
-            ->with('success', 'Статья успешно создана!');
+            ->with('success', 'Статья успешно создана! Уведомления отправлены.');
     }
 
     /**
@@ -65,9 +82,19 @@ class ArticleController extends Controller
      */
     public function show(Article $article)
     {
+        // Увеличиваем счетчик просмотров (это действие должно быть вне кэша)
         $article->increment('views');
-        
-        return view('articles.show', compact('article'));
+
+        $cacheKey = 'article:' . $article->id;
+
+        // !!! ДОБАВЛЕНО: Кэшируем данные статьи вместе с комментариями
+        $articleWithData = Cache::rememberForever($cacheKey, function () use ($article) {
+            // Убедитесь, что модель Article имеет отношение 'comments'
+            return $article->load('comments'); 
+        });
+
+        // Передаем в представление кэшированный объект
+        return view('articles.show', ['article' => $articleWithData]);
     }
 
     /**
@@ -75,7 +102,6 @@ class ArticleController extends Controller
      */
     public function edit(Article $article)
     {
-        // Проверяем право на редактирование
         Gate::authorize('update', $article);
 
         return view('articles.edit', compact('article'));
@@ -86,7 +112,6 @@ class ArticleController extends Controller
      */
     public function update(Request $request, Article $article)
     {
-        // Проверяем право на редактирование
         Gate::authorize('update', $article);
 
         $validated = $request->validate([
@@ -108,6 +133,8 @@ class ArticleController extends Controller
 
         $article->update($validated);
 
+        Cache::flush();
+
         return redirect()->route('articles.show', $article->id)
             ->with('success', 'Статья успешно обновлена!');
     }
@@ -117,10 +144,11 @@ class ArticleController extends Controller
      */
     public function destroy(Article $article)
     {
-        // Проверяем право на удаление
         Gate::authorize('delete', $article);
 
         $article->delete();
+
+        Cache::flush();
 
         return redirect()->route('articles.index')
             ->with('success', 'Статья успешно удалена!');

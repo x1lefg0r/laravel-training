@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 import laravel from 'laravel-vite-plugin';
 import tailwindcss from '@tailwindcss/vite';
+import vue from '@vitejs/plugin-vue';
 
 export default defineConfig({
     plugins: [
@@ -9,6 +10,7 @@ export default defineConfig({
             refresh: true,
         }),
         tailwindcss(),
+        vue()
     ],
     server: {
         host: '0.0.0.0',
@@ -16,6 +18,11 @@ export default defineConfig({
         strictPort: true,
         hmr: {
             host: 'localhost'
+        }
+    },
+    resolve: {
+        alias: {
+            'vue': 'vue/dist/vue.esm-bundler.js'
         }
     }
 });
